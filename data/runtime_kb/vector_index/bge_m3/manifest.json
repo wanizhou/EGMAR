@@ -1,0 +1,7 @@
+{
+  "index_type": "bge_m3_dense_sparse_v1",
+  "model_path": "D:\\StarCraft\\LLM-PySC2-master\\my_knowledge\\starcraft_rag\\LLM\\bge-m3",
+  "doc_count": 2563,
+  "max_length": 512,
+  "doc_digest": "e09649118a1c017a4df8a7d15f2699d71873f9150792c0c860728727f1e12131"
+}

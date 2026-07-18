@@ -1,0 +1,6 @@
+torch>=2.2
+transformers>=4.51
+accelerate>=0.30
+FlagEmbedding>=1.3
+numpy>=1.24
+sentencepiece>=0.2

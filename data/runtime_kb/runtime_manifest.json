@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-07-07T13:28:10.520863+00:00",
+  "outputs": {
+    "ability_profiles.jsonl": 136,
+    "entity_profiles.jsonl": 123,
+    "rag_documents.jsonl": 2563,
+    "relation_profiles.jsonl": 1658,
+    "scenario_profiles.jsonl": 9
+  },
+  "runtime_kb_version": "runtime_profiles_v1",
+  "schemas": {
+    "ability_profiles": "ability_profile_v1",
+    "entity_profiles": "entity_profile_v1",
+    "rag_documents": "rag_document_v1",
+    "relation_profiles": "relation_profile_v1",
+    "scenario_profiles": "scenario_profile_v1"
+  },
+  "source_dirs": {
+    "enriched": "D:\\StarCraft\\LLM-PySC2-master\\my_knowledge\\starcraft_kb\\enriched",
+    "processed": "D:\\StarCraft\\LLM-PySC2-master\\my_knowledge\\starcraft_kb\\processed"
+  }
+}
