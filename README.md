@@ -16,6 +16,7 @@ starcraft-rag/
 ├── data/
 │   ├── runtime_kb/       # RAG 知识库与预构建 BGE 索引
 │   └── qa/               # 20 条快速验证数据与 1000 条批量 QA 数据
+│   └── 逐题审核明细.md    # 人工抽取100条QA数据进行审核与修复
 ├── scripts/
 │   ├── query.py          # 单问题问答
 │   ├── predict_qa.py     # 批量本地预测
