@@ -1,45 +1,61 @@
-# StarCraft RAG（本地 Qwen3-8B + BGE-M3）
+# EGMAR
 
-一个面向星际争霸 II 知识问答的本地 RAG 项目，包含检索、智能体推理、答案综合、批量预测与 QA 数据生成流程。
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-## 功能与边界
+Evidence-Grounded Multi-Agent Reasoning for Strategic Decision-Making in StarCraft II
 
-- 默认完整流程：**本地 Qwen3-8B 路由 → BGE-M3 混合检索 → 本地 LLM 智能体证据推理 → 本地 LLM 答案综合**。
-- 提供单问题问答与批量预测，预测结果以 Markdown 和 JSON 格式保存。
-- 提供运行时知识库、预构建 BGE-M3 索引，以及 20 条快速验证数据和 1000 条批量 QA 数据。
-- 提供基于 OpenAI-compatible 接口的 QA 数据生成脚本。
+EGMAR supports knowledge-based question answering and strategic decision-making in StarCraft II. It organizes game knowledge into structured profiles, assigns evidence-selection tasks to specialized agents, and synthesizes answers with source references.
 
-## 目录
+This repository provides the initial open-source implementation accompanying the paper, including local question answering, batch prediction, a runtime knowledge base, QA datasets, and an API-based QA generation tool. The default workflow uses local Qwen3-8B and BGE-M3 models.
+
+## Method overview
 
 ```text
-starcraft-rag/
+Question -> Query routing -> BGE-M3 hybrid retrieval
+         -> Profile resolution -> Agent evidence selection -> Answer synthesis
+```
+
+Retrieval combines dense semantic vectors, sparse lexical weights, and document metadata. Retrieved documents link to structured profiles, allowing agents to select evidence from specific fields and retain source information.
+
+| Agent | Responsibilities |
+| --- | --- |
+| `UnitProfileAgent` | Unit and building attributes, combat capabilities, and tactical information |
+| `AbilityAgent` | Ability effects, properties, and usage constraints |
+| `CounterAgent` | Counter relations and applicable conditions |
+| `TechTreeAgent` | Production costs, prerequisites, and upgrades |
+| `ScenarioRouterAgent` | Scenario descriptions, triggers, and related knowledge |
+
+Routing, agent reasoning, and answer synthesis share one local Qwen3-8B provider. Agent tasks run sequentially, and the synthesis output includes supporting evidence, uncertainties, and conflicts.
+
+## Repository structure
+
+```text
+EGMAR/
 ├── data/
-│   ├── runtime_kb/       # RAG 知识库与预构建 BGE 索引
-│   └── qa/               # 20 条快速验证数据与 1000 条批量 QA 数据
-│   └── 逐题审核明细.md    # 人工抽取100条QA数据进行审核与修复
+│   ├── runtime_kb/          # Structured profiles, RAG documents, and BGE-M3 index
+│   ├── qa/                  # 20-item and 1,000-item QA datasets
+│   └── 逐题审核明细.md        # Review records for 100 QA pairs
 ├── scripts/
-│   ├── query.py          # 单问题问答
-│   ├── predict_qa.py     # 批量本地预测
-│   └── generate_qa.py    # API 问题生成，输出数据集与 Markdown 报告
-├── src/starcraft_rag/    # RAG、检索器、智能体和本地 LLM 实现
-├── reports/              # 预测或问题生成结果（Git 忽略）
-├── tests/                # 无模型离线校验
+│   ├── query.py             # Single-question inference
+│   ├── predict_qa.py        # Batch prediction
+│   └── generate_qa.py       # API-based QA generation
+├── src/starcraft_rag/       # Routing, retrieval, agents, and answer synthesis
+├── reports/                # Prediction and QA generation outputs
+├── tests/test_offline.py   # Offline structure and data checks
 └── requirements.txt
 ```
 
-## 安装
+## Installation and models
 
-建议使用 Python 3.10 或更高版本，并根据本机 CUDA/CPU 环境安装兼容的 PyTorch：
+Use Python 3.10 or later and a PyTorch installation compatible with your CUDA or CPU environment.
 
 ```powershell
-git clone https://github.com/<owner>/K-LLMA.git
-cd K-LLMA
+git clone https://github.com/wanizhou/EGMAR.git
+cd EGMAR
 python -m pip install -r requirements.txt
 ```
 
-## 模型路径参数：`--model-root`
-
-唯一需要为本地推理调整的参数是 `--model-root`。该目录下必须包含：
+Place the Qwen3-8B and BGE-M3 model weights, configuration, and tokenizer files under a common model root. The Qwen3-8B tokenizer must support a chat template.
 
 ```text
 <model-root>/
@@ -47,72 +63,106 @@ python -m pip install -r requirements.txt
 └── bge-m3/
 ```
 
-模型根目录可通过 `--model-root` 指定，也可通过环境变量 `SC2_MODEL_ROOT` 配置。
+Set the model root in PowerShell.
 
 ```powershell
-python scripts\query.py "How do I counter Dark Templar?" --model-root E:\models\starcraft_llm
+$env:SC2_MODEL_ROOT = "E:\models\starcraft_llm"
 ```
 
-## 问答与批量预测
+You can also pass `--model-root "E:\models\starcraft_llm"` to the inference commands. This argument takes precedence over `SC2_MODEL_ROOT`.
 
-单问题问答：
+A CUDA GPU is recommended. The local language model defaults to FP16 with `device_map="auto"`. The retriever automatically rebuilds its index when the documents, model path, or encoding settings change.
+
+## Usage
+
+Run the following commands from the repository root.
+
+### Single-question inference
 
 ```powershell
-python scripts\query.py "How do I counter Dark Templar?"
+python scripts/query.py "How do I counter Dark Templar?"
+python scripts/query.py "What are the prerequisites for producing a Colossus?" --json
 ```
 
-使用 20 条快速验证数据运行批量预测：
+The default output is the answer text. Add `--json` to inspect the query plan, retrieved documents, agent evidence, and synthesis output.
+
+### Batch prediction
+
+Start with a few questions, or select one of the bundled datasets.
 
 ```powershell
-python scripts\predict_qa.py --questions data\qa\qa_dataset_20.jsonl
+python scripts/predict_qa.py --limit 3
+python scripts/predict_qa.py --questions data/qa/qa_dataset_20.jsonl
+python scripts/predict_qa.py --questions data/qa/qa_dataset_1000.jsonl
 ```
 
-使用 1000 条 QA 数据运行批量预测：
+| Argument | Purpose |
+| --- | --- |
+| `--model-root` | Model root containing `Qwen3-8B` and `bge-m3` |
+| `--questions` | Input JSONL file, defaulting to the 20-item dataset |
+| `--limit` | Process only the first N questions |
+
+Custom inputs use one JSON object per line, with a required `question` field and an optional `id`.
+
+```json
+{"id": "question_001", "question": "How do I counter Dark Templar?"}
+```
+
+Each run saves `prediction_results.md` and `predictions.json` under `reports/predictions/<timestamp>/`, updating the files after each question.
+
+## Knowledge base and QA datasets
+
+### Structured knowledge base
+
+The runtime knowledge base is stored in `data/runtime_kb/`.
+
+| File | Content |
+| --- | --- |
+| `entity_profiles.jsonl` | Unit and building attributes, costs, abilities, and technology information |
+| `ability_profiles.jsonl` | Ability effects, metrics, and constraints |
+| `relation_profiles.jsonl` | Structured relations and applicable conditions |
+| `scenario_profiles.jsonl` | Scenario tags, descriptions, and related knowledge |
+| `rag_documents.jsonl` | Retrieval text, metadata, and profile references |
+
+Knowledge entries distinguish processed explicit facts (`processed`) from knowledge derived through rules (`enriched`). Agent evidence retains references to the source profiles and fields.
+
+### QA datasets
+
+The datasets cover `single_hop`, `two_hop`, `multi_hop`, and `ambiguous` questions.
+
+| Dataset | Items | Purpose |
+| --- | --- | --- |
+| `data/qa/qa_dataset_20.jsonl` | 20 | Quick validation of the local workflow |
+| `data/qa/qa_dataset_1000.jsonl` | 1,000 | Batch QA experiments and result analysis |
+
+The 1,000-item dataset contains 250 items per category. Records include questions, reference answers, category labels, and generation and validation model metadata. The file `data/逐题审核明细.md` contains review records and proposed answer revisions for 100 QA pairs.
+
+## QA data generation
+
+Generate questions and reference answers from runtime RAG documents through an OpenAI-compatible `/chat/completions` endpoint.
 
 ```powershell
-python scripts\predict_qa.py --questions data\qa\qa_dataset_1000.jsonl
+$env:QA_API_KEY = "your-api-key"
+python scripts/generate_qa.py --count 20
 ```
 
-常用参数：
+| Argument | Environment variable | Default or requirement |
+| --- | --- | --- |
+| `--api-key` | `QA_API_KEY` | Required |
+| `--api-base` | `QA_API_BASE` | `https://api.siliconflow.cn/v1` |
+| `--api-model` | `QA_API_MODEL` | `deepseek-ai/DeepSeek-V3.1-Terminus` |
+| `--count` | - | Number of generation attempts, defaulting to 20 |
 
-- `--model-root <目录>`：替换本地 Qwen3-8B 与 BGE-M3 的共同父目录。
-- `--questions <jsonl>`：指定输入问题文件。
-- `--limit <N>`：限制本次预测的问题数量。
+Outputs are saved as `qa_dataset.jsonl` and `qa_generation_report.md` under `reports/qa_generation/<timestamp>/`.
 
-每次运行都会创建 `reports/predictions/<时间戳>/prediction_results.md` 与 `predictions.json`，记录问题与对应预测结果。
-
-## 生成 QA 数据
-
-QA 数据生成支持 OpenAI-compatible `/chat/completions` 接口：
+## Offline validation
 
 ```powershell
-python scripts\generate_qa.py --api-key $env:QA_API_KEY --count 20
+python -m unittest discover -s tests -p test_offline.py -v
 ```
 
-也可以通过环境变量 `QA_API_KEY` 配置访问凭据：
+These checks cover knowledge-base loading, the index manifest, QA data format, model directory names, and the prediction entry point.
 
-```powershell
-$env:QA_API_KEY = "your-key"
-python scripts\generate_qa.py --count 20
-```
+## Planned releases
 
-API 相关参数：
-
-- `--api-key`：必填；也可使用 `QA_API_KEY` 环境变量。
-- `--api-base`：API 根地址，默认 `https://api.siliconflow.cn/v1`；也可使用 `QA_API_BASE`。
-- `--api-model`：生成模型名；也可使用 `QA_API_MODEL`。
-- `--count`：生成数量，默认 20。
-
-生成完成后会写入 `reports/qa_generation/<时间戳>/qa_dataset.jsonl` 和 `qa_generation_report.md`。
-
-## 校验
-
-不加载模型的结构和数据校验：
-
-```powershell
-python -m unittest tests\test_offline.py
-```
-
----
-
-**版本说明：当前为 Qwen3-8B 基础版本。本仓库提供论文实验所需的最小可复现实现与运行说明；论文录用后，我们计划进一步完善，并可能发布更完整的工程版本。**
+We plan to release the code for adapting and integrating EGMAR with TextStarCraft II in a future update.
