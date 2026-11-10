@@ -34,7 +34,7 @@ EGMAR/
 ├── data/
 │   ├── runtime_kb/          # Structured profiles, RAG documents, and BGE-M3 index
 │   ├── qa/                  # 20-item and 1,000-item QA datasets
-│   └── 逐题审核明细.md        # Review records for 100 QA pairs
+│   └── Per-Item Review Details.md        # Review records for 100 QA pairs
 ├── scripts/
 │   ├── query.py             # Single-question inference
 │   ├── predict_qa.py        # Batch prediction
