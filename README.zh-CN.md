@@ -34,7 +34,7 @@ EGMAR/
 ├── data/
 │   ├── runtime_kb/          # 结构化知识、RAG 文档与 BGE-M3 索引
 │   ├── qa/                  # 20 条与 1,000 条 QA 数据
-│   └── 逐题审核明细.md        # 100 条 QA 的审核记录
+│   └── Per-Item Review Details.md        # 100 条 QA 的审核记录
 ├── scripts/
 │   ├── query.py             # 单问题问答
 │   ├── predict_qa.py        # 批量预测
