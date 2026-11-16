@@ -221,8 +221,8 @@ COMPLEXITY_DEFINITIONS = {
 }
 
 VALIDATION_THRESHOLDS = {
-    "mean_answer_score": 6.5,
-    "mean_groundedness_score": 6.5,
+    "mean_answer_score": 8.0,
+    "mean_groundedness_score": 8.0,
     "mean_complexity_confidence": 6.0,
     "min_answer_score": 5.0,
     "min_groundedness_score": 5.0,
