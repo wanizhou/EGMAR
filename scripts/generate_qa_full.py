@@ -224,7 +224,7 @@ VALIDATION_THRESHOLDS = {
     "mean_answer_score": 8.0,
     "mean_groundedness_score": 8.0,
     "mean_complexity_confidence": 6.0,
-    "min_answer_score": 5.0,
+    "min_answer_score": 7.0,
     "min_groundedness_score": 5.0,
     "min_accept_count": 3,
     "min_complexity_label_count": 2,
