@@ -37,6 +37,7 @@ EGMAR/
 │   └── Per-Item Review Details.md        # Review records for 100 QA pairs
 ├── scripts/
 │   ├── query.py             # Single-question inference
+│   └── generate_qa_full.py  # Complete automated QA construction workflow
 │   ├── predict_qa.py        # Batch prediction
 │   └── generate_qa.py       # API-based QA generation
 ├── src/starcraft_rag/       # Routing, retrieval, agents, and answer synthesis
@@ -135,11 +136,13 @@ The datasets cover `single_hop`, `two_hop`, `multi_hop`, and `ambiguous` questio
 | `data/qa/qa_dataset_20.jsonl` | 20 | Quick validation of the local workflow |
 | `data/qa/qa_dataset_1000.jsonl` | 1,000 | Batch QA experiments and result analysis |
 
-The 1,000-item dataset contains 250 items per category. Records include questions, reference answers, category labels, and generation and validation model metadata. The file `data/逐题审核明细.md` contains review records and proposed answer revisions for 100 QA pairs.
+The 1,000-item dataset contains 250 items per category. Records include questions, reference answers, category labels, and generation and validation model metadata. The file `data/Per-Item Review Details.md` contains review records and proposed answer revisions for 100 QA pairs.
 
 ## QA data generation
 
-Generate questions and reference answers from runtime RAG documents through an OpenAI-compatible `/chat/completions` endpoint.
+The complete automated QA construction workflow is provided in [`scripts/generate_qa_full.py`](scripts/generate_qa_full.py). It includes evidence-packet construction, rotating multi-model generation, exact and near-duplicate filtering, optional BGE-M3 semantic deduplication, cross-model validation, evidence-chain checks, and checkpointing.
+
+[`scripts/generate_qa.py`](scripts/generate_qa.py) provides a lightweight generator for individual RAG documents. The commands and arguments below apply to this lightweight script.
 
 ```powershell
 $env:QA_API_KEY = "your-api-key"
